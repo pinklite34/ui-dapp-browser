@@ -25,17 +25,41 @@
   https://evan.network/license/
 */
 
-/**
- * use translate to handle json results => format result as common js and
- * prepend an module.exports, so the json will be returned
- *
- * @param      {any}     load    original load object
- * @return     {string}  module.exports + source, call SystemJS to return JSON
- */
-const translate = function(load) {
-  load.metadata.format = 'cjs';
+// IE does not support CustomEvent 
+// => https://stackoverflow.com/questions/26596123/internet-explorer-9-10-11-event-constructor-doesnt-work
 
-  return 'module.exports = ' + load.source;
-};
+(function () {
+  if ( typeof window.CustomEvent === "function" ) return false; //If not IE
 
-exports.translate = translate;
+  function CustomEvent ( event, params ) {
+    params = params || { bubbles: false, cancelable: false, detail: undefined };
+    var evt = document.createEvent( 'CustomEvent' );
+    evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+    return evt;
+   }
+
+  CustomEvent.prototype = window.Event.prototype;
+
+  window.CustomEvent = CustomEvent;
+})();
+
+if (!HTMLCanvasElement.prototype.toBlob) {
+  Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
+    value: function (callback, type, quality) {
+      var canvas = this;
+      setTimeout(function() {
+
+        var binStr = atob( canvas.toDataURL(type, quality).split(',')[1] ),
+            len = binStr.length,
+            arr = new Uint8Array(len);
+
+        for (var i = 0; i < len; i++ ) {
+          arr[i] = binStr.charCodeAt(i);
+        }
+
+        callback( new Blob( [arr], {type: type || 'image/png'} ) );
+
+      });
+    }
+  });
+}

@@ -46,9 +46,17 @@ const tsc = require('gulp-typescript');
 const tscConfig = require('./../tsconfig.json');
 const tslint = require('gulp-tslint');
 const uglify = require('gulp-uglify');
+const rollupbabel = require('rollup-plugin-babel');
+const commonjs = require('rollup-plugin-commonjs');
+const resolve = require('rollup-plugin-node-resolve');
+const rollup = require('gulp-rollup');
+const rollupBuiltins = require('rollup-plugin-node-builtins');
+const rollupGlobals = require('rollup-plugin-node-globals');
+const rollupSourcemaps = require('rollup-plugin-sourcemaps');
+const rename = require('gulp-rename');
 
 // Generate systemjs-based builds
-const buildFolder = 'src/build';
+const buildFolder = 'build';
 const distFolder = 'runtime/build';
 
 const sourceMaps = false;
@@ -76,14 +84,26 @@ const babelPlugins = [
   'babel-plugin-remove-comments'
 ].map(require.resolve);
 
+// Compile TypeScript to JS
+gulp.task('compile:ts', function () {
+  return gulp
+    .src([
+      'src/*.ts',
+      'src/**/*.ts',
+    ])
+    .pipe(sourcemaps.init())
+    .pipe(tsc(tscConfig.compilerOptions))
+    .pipe(gulp.dest(buildFolder));
+});
+
 gulp.task('bundle:vendor', function() {
   return gulp.src([
     'src/libs/systemjs/system.js',
-    // 'src/libs/systemjs/extras/amd.js',
-    // 'src/libs/systemjs/extras/global.js',
-    // 'src/libs/systemjs/extras/named-exports.js',
+    'src/libs/systemjs/extras/amd.js',
+    'src/libs/systemjs/extras/global.js',
+    'src/libs/systemjs/extras/named-exports.js',
     'src/libs/systemjs/extras/named-register.js',
-    // 'src/libs/systemjs/extras/transform.js',
+    'src/libs/systemjs/extras/transform.js',
     'src/libs/browser-ipfs.js',
     'src/libs/core-js.client.shim.min.js',
     'src/libs/navigo.js',
@@ -95,80 +115,85 @@ gulp.task('bundle:vendor', function() {
     plugins: babelPlugins
   }))
   .pipe(concat('vendor.min.js'))
-  .pipe(gulp.dest('src/build'));
+  .pipe(gulp.dest(distFolder));
 })
 
 gulp.task('bundle:js', ['bundle:vendor'], function() {
-  var builder = new Builder('.', 'systemjs.config.js');
-
-  return builder
-    .bundle(
-      [
-        'src/app/main.ts',
-      ].join(' + '),
-      'src/build/app.min.js',
-      {
-        sourceMaps: sourceMaps,
-        sourceMapContents: sourceMaps,
-        minify: minify
-      }
-    )
-
-    .then(function() {
-      return del([
-        'runtime/build/js/**',
-        '!runtime/build/js/app.min.js',
-        '!runtime/build/js/vendor.min.js'
-      ]);
-    })
-
-    // prepent bcc closure parameter to use loaded bcc within systemjs plugin without outsourcing
-    // to window
-    .then(() => {
-      return gulp
-        .src(['src/build/app.min.js'])
-        .pipe(insert.prepend('let evanGlobals; let process = { env: { } }; '))
-        .pipe(babel({
-          plugins: babelPlugins
-        }))
-        .pipe(gulp.dest('src/build'));
-    })
-    .catch(function(err) {
-      console.error('>>> [systemjs-builder] Bundling failed'.bold.green, err);
-    })
-});
-
-// Compile TypeScript to JS
-gulp.task('compile:ts', function () {
-  return gulp
-    .src([
-      'src/app/*.ts',
-      'src/app/**/*.ts',
-    ])
-    .pipe(plumber({
-      errorHandler: function (err) {
-        console.error('>>> [tsc] Typescript compilation failed'.bold.green);
-        this.emit('end');
-      }}))
+  return gulp.src(`${ buildFolder }/**/*.js`)
+    // transform the files here.
     .pipe(sourcemaps.init())
-    .pipe(tsc(tscConfig.compilerOptions))
-    .pipe(sourcemaps.write('src/build'))
-    .pipe(gulp.dest('src/build'));
-});
+    .pipe(rollup({
+      onwarn: function(warning) { },
 
-// Minify JS bundle
-gulp.task('minify:js', function() {
-  return gulp
-    .src('runtime/dist/js/app.min.js')
-    .pipe(uglify())
-    .pipe(gulp.dest('runtime/dist/js'));
-});
+      // Bundle's entry point
+      // See "input" in https://rollupjs.org/#core-functionality
+      input: `${ buildFolder }/main.js`,
 
-gulp.task('copy:build', function () {
-  return gulp.src([`${buildFolder}/*`])
+      // Allow mixing of hypothetical and actual files. "Actual" files can be files
+      // accessed by Rollup or produced by plugins further down the chain.
+      // This prevents errors like: 'path/file' does not exist in the hypothetical file system
+      // when subdirectories are used in the `src` directory.
+      allowRealFiles: true,
+
+      // A list of IDs of modules that should remain external to the bundle
+      // See "external" in https://rollupjs.org/#core-functionality
+      external: [ ],
+
+      // Format of generated bundle
+      // See "format" in https://rollupjs.org/#core-functionality
+      format: 'iife',
+
+      treeshake: true,
+
+      // Export mode to use
+      // See "exports" in https://rollupjs.org/#danger-zone
+      exports: 'named',
+
+      // The name to use for the module for UMD/IIFE bundles
+      // (required for bundles with exports)
+      // See "name" in https://rollupjs.org/#core-functionality
+      name: 'dappbrowser',
+
+      // See "globals" in https://rollupjs.org/#core-functionality
+      globals: {
+        typescript: 'ts'
+      },
+
+      plugins:[
+        resolve({
+          preferBuiltins: true,
+        }),
+        commonjs({
+          // include: 'node_modules/angular-libs/node_modules/rxjs/**'
+        }),
+        rollupGlobals(),
+        rollupBuiltins(),
+        rollupbabel({
+          exclude: [/node_modules/]
+        })
+        // analyze({ limit: 20 }),
+        // cleanup()
+        // rollupSourcemaps()
+      ]
+    }))
+    .pipe(insert.prepend('let evanGlobals; let process = { env: { } }; '))
+
+    // fix ace is doing weird blob stuff
+    // .pipe(replace(/if\ \(e\ instanceof\ window\.DOMException\)\ \{/g, 'if (true) {'))
+
+    // save file
+    .pipe(rename(`app.min.js`))
+    //´.pipe(sourcemaps.write(`.`,{includeContent: true, sourceRoot: `${dappRelativePath}`}))
     .pipe(gulp.dest(distFolder));
 });
 
+gulp.task('copy:build', function () {
+  return gulp
+    .src([
+      `src/*`
+    ])
+    .pipe(gulp.dest(distFolder));
+});
 
 gulp.task('copy:assets', function() {
   return gulp.src(
@@ -189,11 +214,10 @@ gulp.task('copy:assets', function() {
 
 // Clean the js distribution directory
 gulp.task('clean:dist', function () {
-  return del(['runtime/*', '!runtime/external']);
+  return del(['runtime/*', 'build', '!runtime/external']);
 });
 
 gulp.task('clean', ['clean:dist']);
-
 
 // Lint Typescript
 gulp.task('lint:ts', function() {
@@ -240,11 +264,11 @@ gulp.task('ionic-sass', function () {
 
 
 gulp.task('scripts', function(callback) {
-  runSequence(['lint:ts', 'clean:dist'], 'compile:ts', 'bundle:js', 'minify:js', callback);
+  runSequence(['lint:ts', 'clean:dist'], 'compile:ts', 'bundle:js', callback);
 });
 
 gulp.task('copy', function(callback) {
-  runSequence('copy:build', 'copy:assets', callback);
+  runSequence('copy:assets', callback);
 });
 
 gulp.task('build', function(callback) {

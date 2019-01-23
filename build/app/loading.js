@@ -24,34 +24,29 @@
   For more information, please contact evan GmbH at this address:
   https://evan.network/license/
 */
-
+import * as utils from './utils';
 /**
- * Check out https://googlechromelabs.github.io/sw-toolbox/ for
- * more info on how to use sw-toolbox to custom configure your service worker.
+ * control additional logs on first load
  */
-
-
-'use strict';
-importScripts('./sw-toolbox.js');
-
-self.toolbox.options.cache = {
-  name: 'ionic-cache'
-};
-
-// pre-cache our key assets
-self.toolbox.precache(
-  [
-    './build/app.min.js',
-    './build/dapp-root.css',
-    'index.html',
-    'manifest.json'
-  ]
-);
-
-// dynamically cache any other local assets
-self.toolbox.router.any('/*', self.toolbox.fastest);
-self.toolbox.router.any('https://ipfs.evan.network/*', self.toolbox.fastest);
-
-// for any other requests go to the network, cache,
-// and then only use that cached resource if your user goes offline
-self.toolbox.router.default = self.toolbox.networkFirst;
+var isFirstLoad = true;
+/**
+ * Hides the initial loading that is embedded to the root dapp html page. => It
+ * will disappear smooth and will be removed when animation is over
+ */
+export function finishDAppLoading() {
+    var initialLoading = document.getElementById('evan-initial-loading');
+    if (initialLoading) {
+        initialLoading.className += ' hidden';
+        setTimeout(function () {
+            // don't remove it, when another function call was started before
+            if (initialLoading.parentElement) {
+                initialLoading.parentElement.removeChild(initialLoading);
+            }
+        }, 500);
+    }
+    if (isFirstLoad) {
+        isFirstLoad = false;
+        utils.devLog("Loading evan.network finished: " + (Date.now() - window['evanloadTime']) / 1000 + "s");
+    }
+    utils.devLog("Loading dapp finished: " + (Date.now() - window['evanDApploadTime']) / 1000 + "s");
+}

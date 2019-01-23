@@ -148,22 +148,14 @@
     </script>
 
     <!-- load dapp sources from relative path for local development -->
-    <script type="systemjs-importmap">
+    <script type="importmap">
       {
         "imports": {
-          "dapp-browser": "runtime/external/pwa/build/app.js"
+          "dapp-browser": "runtime/build/app.min.js"
         }
       }
     </script>
     <script src="build/vendor.min.js"></script>
-    <!-- <script src="build/app.min.js"></script> -->
-    <script>
-      System
-        .import("dapp-browser")
-        .then(function(main) {
-          main.initializeEvanNetworkStructure()
-        })
-        .catch(function (err) { console.error(err); });
-    </script>
+    <script src="build/app.min.js" type="module"></script>
   </body>
 </html>

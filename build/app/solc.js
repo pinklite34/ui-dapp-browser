@@ -24,19 +24,33 @@
   For more information, please contact evan GmbH at this address:
   https://evan.network/license/
 */
-
 /**
- * Load basic text (used for css)
- *
- * @param      {string}  load    SystemJS payload properties
- * @return     {string}  location adjusted to return only text
+ * Smart contracts solc representation.
  */
-exports.translate = function(load) {
-  if (this.builder && this.transpiler) {
-    load.metadata.format = 'esm';
-    return 'exp' + 'ort var __useDefault = ' + JSON.stringify(load.source) + '; exp' + 'ort default __useDefault;';
-  }
-
-  load.metadata.format = 'amd';
-  return 'def' + 'ine(function() {\nreturn ' + JSON.stringify(load.source) + ';\n});';
-}
+var Solc = /** @class */ (function () {
+    /**
+     * Constructor of the Solc. Takes unformatted SmartContracts.
+     *
+     * @param SmartContracts Smart contracts export of the smart contracts project.
+     */
+    function Solc(SmartContracts) {
+        this.SmartContracts = SmartContracts;
+    }
+    /**
+     * Takes the unformatted contracts from the constructor and format the object contract keys
+     * AbstractENS.sol => AbstractENS
+     *
+     * @return Formatted Smart Contracts objects with shorted key names.
+     */
+    Solc.prototype.getContracts = function () {
+        var _this = this;
+        var shortenedContracts = {};
+        Object.keys(this.SmartContracts).forEach(function (key) {
+            var contractKey = (key.indexOf(':') !== -1) ? key.split(':')[1] : key;
+            shortenedContracts[contractKey] = _this.SmartContracts[key];
+        });
+        return shortenedContracts;
+    };
+    return Solc;
+}());
+export { Solc };

@@ -61,6 +61,10 @@ let lastAnimationFrame;
 export async function setUpDevMode(): Promise<void> {
   const host = window.location.host;
 
+  devMode = evanGlobals.devMode = [ 'pwa' ];
+
+  return;
+
   if ((host.indexOf('localhost') !== -1 || host.indexOf('127.0.0.1') !== -1) &&
       window.location.href.indexOf('dev.html') !== -1) {
     evanGlobals.devMode = await evanGlobals.System.import(`${ window.location.origin }/dev-dapps!json`);

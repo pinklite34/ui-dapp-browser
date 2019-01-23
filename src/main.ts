@@ -25,24 +25,24 @@
   https://evan.network/license/
 */
 
-import * as bccHelper from './bcc/bcc';
-import * as core from './core';
-import * as dapp from './dapp';
-import * as ipfs from './ipfs';
-import * as lightwallet from './lightwallet';
-import * as loading from './loading';
-import * as notifications from './notifications';
-import * as queue from './queue';
-import * as routing from './routing';
-import * as solc from './solc';
-import * as utils from './utils';
-import * as web3Helper from './web3';
-import { AccountStore } from './bcc/AccountStore';
-import { config } from './config';
-import { KeyProvider, getLatestKeyProvider } from './bcc/KeyProvider';
-import { Solc } from './solc';
-import { startWatchers } from './watchers';
-import { updateCoreRuntime, getCoreOptions } from './bcc/bcc';
+import * as bccHelper from './app/bcc/bcc';
+import * as core from './app/core';
+import * as dapp from './app/dapp';
+import * as ipfs from './app/ipfs';
+import * as lightwallet from './app/lightwallet';
+import * as loading from './app/loading';
+import * as notifications from './app/notifications';
+import * as queue from './app/queue';
+import * as routing from './app/routing';
+import * as solc from './app/solc';
+import * as utils from './app/utils';
+import * as web3Helper from './app/web3';
+import { AccountStore } from './app/bcc/AccountStore';
+import { config } from './app/config';
+import { KeyProvider, getLatestKeyProvider } from './app/bcc/KeyProvider';
+import { Solc } from './app/solc';
+import { startWatchers } from './app/watchers';
+import { updateCoreRuntime, getCoreOptions } from './app/bcc/bcc';
 
 
 /**
@@ -84,14 +84,14 @@ evanGlobals = {
   queryParams: routing.getQueryParameters()
 };
 
-evanGlobals.System.map['bcc'] = `bcc.${ getDomainName() }!dapp-content`;
-evanGlobals.System.map['bcc-profile'] = `bcc.${ getDomainName() }!dapp-content`;
-evanGlobals.System.map['bcc-bc'] = `bcc.${ getDomainName() }!dapp-content`;
-evanGlobals.System.map['@evan.network/ui-dapp-browser'] = `dapp-browser!dapp-content`;
-evanGlobals.System.map['@evan.network/api-blockchain-core'] = `bcc.${ getDomainName() }!dapp-content`;
-evanGlobals.System.map['@evan.network/dbcp'] = `bcc.${ getDomainName() }!dapp-content`;
-evanGlobals.System.map['smart-contracts'] = `smartcontracts.${ getDomainName() }!dapp-content`;
-evanGlobals.System.map['@evan.network/smart-contracts-core'] = `smartcontracts.${ getDomainName() }!dapp-content`;
+// evanGlobals.System.map['bcc'] = `bcc.${ getDomainName() }!dapp-content`;
+// evanGlobals.System.map['bcc-profile'] = `bcc.${ getDomainName() }!dapp-content`;
+// evanGlobals.System.map['bcc-bc'] = `bcc.${ getDomainName() }!dapp-content`;
+// evanGlobals.System.map['@evan.network/ui-dapp-browser'] = `dapp-browser!dapp-content`;
+// evanGlobals.System.map['@evan.network/api-blockchain-core'] = `bcc.${ getDomainName() }!dapp-content`;
+// evanGlobals.System.map['@evan.network/dbcp'] = `bcc.${ getDomainName() }!dapp-content`;
+// evanGlobals.System.map['smart-contracts'] = `smartcontracts.${ getDomainName() }!dapp-content`;
+// evanGlobals.System.map['@evan.network/smart-contracts-core'] = `smartcontracts.${ getDomainName() }!dapp-content`;
 
 /**
  * Starts the whole dapp-browser.
@@ -114,10 +114,10 @@ export async function initializeEvanNetworkStructure(): Promise<void> {
   Promise
     .all<any, any, any>([
       System
-        .import('bcc')
+        .import('https://ipfs.evan.network/ipns/Qme9gmKpueriR7qMH5SNW3De3b9AFBkUGvFMS8ve1SuYBy/bcc.js')
         .then(CoreBundle => utils.raiseProgress(10, CoreBundle)),
       System
-        .import('smart-contracts')
+        .import('https://ipfs.evan.network/ipns/QmRMz7yzMqjbEqXNdcmqk2WMFcXtpY41Nt9CqsLwMgkF43/compiled.js')
         .then(SmartContracts => utils.raiseProgress(10, SmartContracts)),
       // check if an executor agent should be used for the application runtime
       core.getAgentExecutor()
@@ -248,3 +248,5 @@ export {
   web3,
   web3Helper,
 }
+
+initializeEvanNetworkStructure()
