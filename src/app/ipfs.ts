@@ -25,12 +25,13 @@
   https://evan.network/license/
 */
 
-import * as browserIpfs from '../libs/browser-ipfs.js';
+import { ipfs, setProvider } from './browser.ipfs';
+import * as utils from './utils';
 
 /**
  * set the default provider for the browser ipfs for the current window location
  */
-browserIpfs.default.setProvider({
+setProvider({
   host: window.location.host.split(':')[0],
   port: window.location.port,
   protocol: window.location.protocol.replace(':', ''),
@@ -66,11 +67,11 @@ export function getRestIpfs(): any {
     restIpfsConfig.port = '8080';
   }
 
-  browserIpfs.default.api.host = restIpfsConfig.host;
-  browserIpfs.default.api.port = restIpfsConfig.port;
-  browserIpfs.default.api.protocol = restIpfsConfig.protocol;
+  ipfs.api.host = restIpfsConfig.host;
+  ipfs.api.port = restIpfsConfig.port;
+  ipfs.api.protocol = restIpfsConfig.protocol;
 
-  return browserIpfs.default;
+  return ipfs;
 }
 
 /**

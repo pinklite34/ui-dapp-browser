@@ -41,9 +41,6 @@
       'typescript': {
         "exports": "ts"
       },
-      'angular-core': {
-        build: false
-      },
       'app': {
         deps: [
           // dependencies to load before this module
@@ -64,22 +61,12 @@
     paths: {
       // paths serve as alias
       'npm:': '../ui-dapp-browser/node_modules/',
-      'systemjs-plugins': 'src/systemjs-plugins',
       'app': 'src/app'
     },
     // map tells the System loader where to look for things
     map: {
       // plugins
-      'ipfs': 'src/systemjs-plugins/ipfs.js',
-      'ens': 'src/systemjs-plugins/ens.js',
-      'dapp-content': 'src/systemjs-plugins/dapp-content.js',
-      'json': 'src/systemjs-plugins/json.js',
-      'text': 'src/systemjs-plugins/text.js',
-      'css': 'node_modules/systemjs-plugin-css/css.js',
-      'systemjs': 'npm:systemjs/dist/system.src.js',
-
-      'dapp': 'src/app/main.ts',
-      'dapp-browser': 'src/app/main.ts',
+      // 'dapp-browser': 'src/app/main.ts',
 
       // npm
       'ts': 'npm:plugin-typescript/lib/plugin.js',

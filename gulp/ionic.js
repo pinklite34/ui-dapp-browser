@@ -78,12 +78,18 @@ const babelPlugins = [
 
 gulp.task('bundle:vendor', function() {
   return gulp.src([
+    'src/libs/systemjs/system.js',
+    // 'src/libs/systemjs/extras/amd.js',
+    // 'src/libs/systemjs/extras/global.js',
+    // 'src/libs/systemjs/extras/named-exports.js',
+    'src/libs/systemjs/extras/named-register.js',
+    // 'src/libs/systemjs/extras/transform.js',
+    'src/libs/browser-ipfs.js',
     'src/libs/core-js.client.shim.min.js',
-    'src/libs/zone.js',
-    'src/libs/system.src.js',
     'src/libs/navigo.js',
     'src/libs/polyfills.js',
-    'systemjs.config.js',
+    'src/libs/zone.js',
+    // 'systemjs.config.js',
   ])
   .pipe(babel({
     plugins: babelPlugins
@@ -98,13 +104,7 @@ gulp.task('bundle:js', ['bundle:vendor'], function() {
   return builder
     .bundle(
       [
-        'app',
-        'src/systemjs-plugins/ipfs.js',
-        'src/systemjs-plugins/ens.js',
-        'src/systemjs-plugins/dapp-content.js',
-        'src/systemjs-plugins/json.js',
-        'src/systemjs-plugins/text.js',
-        'node_modules/systemjs-plugin-css/css.js'
+        'src/app/main.ts',
       ].join(' + '),
       'src/build/app.min.js',
       {
@@ -234,7 +234,7 @@ gulp.task('ionic-sass', function () {
     .pipe(concat(`dapp-root.css`))
     .pipe(cssBase64({ maxWeightResource: 849616, baseDir : 'node_modules/ui-angular-sass' }))
     .pipe(cssBase64({ maxWeightResource: 849616, baseDir : '../../ui-angular-sass' }))
-    .pipe(cssBase64({ maxWeightResource: 228000, baseDir : '../../ui-angular-libs/node_modules/ionic-angular/fonts' }))
+    .pipe(cssBase64({ maxWeightResource: 228000, baseDir : '../../ui--libs/noangularde_modules/ionic-angular/fonts' }))
     .pipe(gulp.dest(buildFolder));
 });
 
